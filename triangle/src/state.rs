@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{io, sync::Arc};
 use winit::window::Window;
 
 pub struct State<'a> {
@@ -12,7 +12,7 @@ pub struct State<'a> {
 }
 
 impl<'a> State<'a> {
-    pub async fn new(window: Arc<Window>) -> State<'a> {
+    pub async fn new(window: Arc<Window>) -> Result<State<'a>, io::Error> {
         // window size
         let size = window.inner_size();
 
@@ -23,9 +23,16 @@ impl<'a> State<'a> {
         });
 
         // window we draw on
-        let surface = instance.create_surface(Arc::clone(&window)).unwrap();
+        // TODO: Create custom error
+        let surface = instance
+            .create_surface(Arc::clone(&window))
+            .map_err(|err| {
+                eprintln!("Error creating surface: {}", err);
+                return io::ErrorKind::Other;
+            })?;
 
         // handle the graphics card, get information about the device
+        // TODO: change error
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -33,8 +40,13 @@ impl<'a> State<'a> {
                 force_fallback_adapter: false,
             })
             .await
-            .unwrap();
+            .ok_or(io::ErrorKind::NotFound)
+            .map_err(|err| {
+                eprintln!("Error requenting adapter: {}", err);
+                return io::ErrorKind::NotFound;
+            })?;
 
+        // TODO: Change error
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
@@ -44,8 +56,10 @@ impl<'a> State<'a> {
                 },
                 None, // trace path
             )
-            .await
-            .unwrap();
+            .await.map_err(|err|{
+                eprintln!("Error requenting adapter: {}", err);
+                return io::ErrorKind::NotFound;
+            })?;
 
         let surface_caps = surface.get_capabilities(&adapter);
         let surface_format = surface_caps
@@ -116,7 +130,7 @@ impl<'a> State<'a> {
             multiview: None,
         });
 
-        Self {
+        Ok(Self {
             window,
             surface,
             device,
@@ -124,7 +138,7 @@ impl<'a> State<'a> {
             config,
             size,
             render_pipeline,
-        }
+        })
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {

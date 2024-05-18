@@ -11,16 +11,20 @@ pub struct App<'a> {
 
 impl ApplicationHandler for App<'_> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let tokio_runtime = tokio::runtime::Runtime::new().unwrap();
+        let tokio_runtime = tokio::runtime::Runtime::new().expect("Error initiating tokio runtime");
 
         let window = Arc::new(
             event_loop
                 .create_window(Window::default_attributes())
-                .unwrap(),
+                .expect("Error creating window"),
         );
         self.window = Some(window.clone());
 
-        let state = tokio_runtime.block_on(async { return State::new(window.clone()).await });
+        let state = tokio_runtime.block_on(async {
+            return State::new(window.clone())
+                .await
+                .expect("Error creating state");
+        });
         self.state = Some(state);
     }
     fn window_event(
@@ -29,7 +33,16 @@ impl ApplicationHandler for App<'_> {
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
-        let state = self.state.as_mut().unwrap();
+        let window = self
+            .window
+            .as_ref()
+            .expect("Error referencing window in window event");
+
+        let state = self
+            .state
+            .as_mut()
+            .expect("Error referencing state in window event");
+
         match event {
             WindowEvent::CloseRequested => {
                 println!("Close requested");
@@ -42,7 +55,7 @@ impl ApplicationHandler for App<'_> {
                     Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
                     Err(e) => eprintln!("{:?}", e),
                 }
-                self.window.as_ref().unwrap().request_redraw();
+                window.request_redraw();
             }
             WindowEvent::Resized(physycal_size) => {
                 state.resize(physycal_size);

@@ -1,0 +1,16 @@
+[workspace]
+members = ["triangle"]
+default-members = ["triangle"]
+resolver = "2"
+
+[workspace.dependencies]
+env_logger = "0.11.3"
+tokio = "1.37.0"
+wgpu = "0.20.0"
+winit = "0.30.0"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["BrunoNotes"]
+description = "Some WGPU learnig experiments"
+edition = "2021"

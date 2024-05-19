@@ -12,7 +12,7 @@ pub struct State<'a> {
 }
 
 impl<'a> State<'a> {
-    pub async fn new(window: Arc<Window>) -> Result<State<'a>, io::Error> {
+    pub async fn new(window: Arc<Window>) -> Result<State<'a>, ()> {
         // window size
         let size = window.inner_size();
 
@@ -27,8 +27,7 @@ impl<'a> State<'a> {
         let surface = instance
             .create_surface(Arc::clone(&window))
             .map_err(|err| {
-                eprintln!("Error creating surface: {}", err);
-                return io::ErrorKind::Other;
+                eprintln!("ERROR: creating surface: {}", err);
             })?;
 
         // handle the graphics card, get information about the device
@@ -42,8 +41,7 @@ impl<'a> State<'a> {
             .await
             .ok_or(io::ErrorKind::NotFound)
             .map_err(|err| {
-                eprintln!("Error requenting adapter: {}", err);
-                return io::ErrorKind::NotFound;
+                eprintln!("ERROR: requenting adapter: {}", err);
             })?;
 
         // TODO: Change error
@@ -57,8 +55,7 @@ impl<'a> State<'a> {
                 None, // trace path
             )
             .await.map_err(|err|{
-                eprintln!("Error requenting adapter: {}", err);
-                return io::ErrorKind::NotFound;
+                eprintln!("ERROR: requenting adapter: {}", err);
             })?;
 
         let surface_caps = surface.get_capabilities(&adapter);

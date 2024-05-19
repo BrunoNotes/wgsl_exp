@@ -11,19 +11,19 @@ pub struct App<'a> {
 
 impl ApplicationHandler for App<'_> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let tokio_runtime = tokio::runtime::Runtime::new().expect("Error initiating tokio runtime");
+        let tokio_runtime = tokio::runtime::Runtime::new().expect("ERROR: initiating tokio runtime");
 
         let window = Arc::new(
             event_loop
                 .create_window(Window::default_attributes())
-                .expect("Error creating window"),
+                .expect("ERROR: creating window"),
         );
         self.window = Some(window.clone());
 
         let state = tokio_runtime.block_on(async {
             return State::new(window.clone())
                 .await
-                .expect("Error creating state");
+                .expect("ERROR: creating state");
         });
         self.state = Some(state);
     }
@@ -36,12 +36,12 @@ impl ApplicationHandler for App<'_> {
         let window = self
             .window
             .as_ref()
-            .expect("Error referencing window in window event");
+            .expect("ERROR: referencing window in window event");
 
         let state = self
             .state
             .as_mut()
-            .expect("Error referencing state in window event");
+            .expect("ERROR: referencing state in window event");
 
         match event {
             WindowEvent::CloseRequested => {
